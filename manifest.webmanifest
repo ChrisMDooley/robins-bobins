@@ -1,0 +1,16 @@
+{
+  "name": "Robin's Bobins",
+  "short_name": "Robin's Bobins",
+  "description": "Unsere kleine Lernwelt – mit Robin.",
+  "lang": "de",
+  "start_url": "./index.html#/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FBF5EC",
+  "theme_color": "#FBF5EC",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

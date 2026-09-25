@@ -80,6 +80,8 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding-block: calc(12px + env(safe-area-inset-top, 0px)) 12px; min-height: 64px; }
 .brand { font-weight: 700; color: var(--ink-soft); font-size: 0.95em; }
+.btn-link.back-apps { text-decoration: none; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.back-apps:not([hidden]) + .brand { margin-right: auto; }
 
 /* coins */
 .coins { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.15em;

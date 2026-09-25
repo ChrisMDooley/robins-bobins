@@ -4,6 +4,10 @@ A small web app for practising German dictation in short sessions. Every sentenc
 
 **HEAR → WRITE → CHECK → UNDERSTAND → CORRECT → REWARD → NEXT**
 
+## Inside Robin's Bobins
+
+This folder is the Diktat Trainer app inside the Robin's Bobins platform (see the repo root). When it is opened from there, the platform tells it which child is practising (`?child=lukas`), its coins go onto that child's one Robin's Bobins balance (via `js/rb-bridge.js`), and "‹ Meine Apps" leads back home. Opened on its own, it behaves exactly as before.
+
 ## Running it
 
 - **On the Mac:** double-click `index.html`. Safari or Chrome both work, and nothing needs installing.

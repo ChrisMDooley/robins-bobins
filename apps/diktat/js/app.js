@@ -6,7 +6,17 @@
   'use strict';
   var DT = window.DT;
   var C = DT.compare, P = DT.practice, speech = DT.speech;
-  var store = DT.createStore(DT.localStorageAdapter(), 'lukas');
+  // Inside Robin's Bobins the platform says who is practising; on its own it is Lukas, as before.
+  var RB = window.RB || null;
+  var child = RB ? RB.requireChild() : null;
+  if (RB && !child) return;                       // requireChild() is already sending us to "Wer bist du?"
+  var childId = child ? child.id : 'lukas';
+  var store = DT.createStore(DT.localStorageAdapter(), childId);
+  if (child && store.state.profile.name !== child.name) { store.state.profile = { id: child.id, name: child.name }; store.save(); }
+
+  // Coins shown are the child's ONE Robin's Bobins balance; Diktat's own ledger is copied across.
+  function balance() { return RB ? RB.coins.balance(childId) : store.balance(); }
+  function syncPlatform() { if (RB && window.RBDiktat) window.RBDiktat.sync(RB, childId, store.state); }
   var $ = function (id) { return document.getElementById(id); };
 
   var session = null;   // current session (see practice.buildSession)
@@ -33,7 +43,7 @@
   }
 
   function updateCoins(bump) {
-    var b = store.balance();
+    var b = balance();
     document.querySelectorAll('.coin-balance').forEach(function (el) { el.textContent = b; });
     if (bump) document.querySelectorAll('.coins').forEach(function (el) {
       if (el.offsetParent === null) return;
@@ -46,6 +56,7 @@
   function award(amount, reason, anchorEl) {
     if (!amount) return;
     store.addCoins(amount, reason, { sessionId: session ? session.id : null });
+    syncPlatform();
     if (session) session.coins += amount;
     popQueue = popQueue.then(function () {
       return new Promise(function (res) {
@@ -355,6 +366,7 @@
         sentenceIds: session.results.map(function (r) { return r.sentenceId; }),
         coins: session.coins, accuracy: b.accuracy });
     });
+    syncPlatform();
 
     var fixed = session.results.reduce(function (s, r) { return s + r.corrected; }, 0);
     var words = {};
@@ -397,7 +409,7 @@
     $('set-spacing').checked = s.spacing === 'wide';
     $('set-length').value = String(s.sessionLength);
     $('data-help').textContent = (store.persistent ? 'Alle Daten bleiben auf diesem Gerät, in diesem Browser.' : 'Achtung: Dieser Browser speichert gerade nichts dauerhaft (privates Fenster?).') +
-      ' ' + store.state.attempts.length + ' Sätze geübt, ' + store.balance() + ' Münzen.';
+      ' ' + store.state.attempts.length + ' Sätze geübt, ' + balance() + (RB ? ' Robin-Münzen.' : ' Münzen.');
     $('backup-text').value = '';
     $('data-msg').textContent = '';
     $('reset-confirm').hidden = true;
@@ -435,9 +447,10 @@
       } catch (e) { $('data-msg').textContent = 'Herunterladen geht hier nicht – bitte „Sicherung kopieren“ nutzen.'; }
     });
     $('btn-import').addEventListener('click', function () {
-      try { store.importJSON($('backup-text').value); applyDisplaySettings(); $('data-msg').textContent = 'Sicherung wiederhergestellt.'; updateCoins(false); }
+      try { store.importJSON($('backup-text').value); syncPlatform(); applyDisplaySettings(); $('data-msg').textContent = 'Sicherung wiederhergestellt.'; updateCoins(false); }
       catch (e) { $('data-msg').textContent = 'Das ist keine gültige Sicherung. Bitte den ganzen Text einfügen.'; }
     });
+    if (RB) document.querySelector('#reset-confirm p').textContent = 'Wirklich den Übungsverlauf im Diktat-Trainer löschen? Die Robin-Münzen bleiben erhalten.';
     $('btn-reset').addEventListener('click', function () { $('reset-confirm').hidden = false; });
     $('btn-reset-no').addEventListener('click', function () { $('reset-confirm').hidden = true; });
     $('btn-reset-yes').addEventListener('click', function () {
@@ -486,6 +499,13 @@
 
   applyDisplaySettings();
   bind();
+  if (RB) {
+    syncPlatform();
+    document.title = 'Diktat-Trainer · ' + child.name;
+    $('btn-apps').hidden = false;
+    $('btn-apps').href = RB.nav.homeUrl(childId);
+    $('btn-apps').addEventListener('click', function () { speech.stop(); });
+  }
   renderHome();
 
   // Ask the browser not to evict our data (Safari clears unused site data after a while).
@@ -493,7 +513,8 @@
 
   // PWA: offline cache + installable. Only on http(s), never in a sandboxed preview.
   try {
-    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && window.self === window.top) {
+    // Inside Robin's Bobins the platform's service worker caches Diktat too.
+    if (!RB && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol) && window.self === window.top) {
       navigator.serviceWorker.register('sw.js').catch(function () { /* optional */ });
     }
   } catch (e) { /* ignore */ }

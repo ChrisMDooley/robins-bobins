@@ -1,0 +1,29 @@
+/* sw.js — Robin's Bobins offline cache (covers the platform AND every app).
+   Bump VERSION on every release. Network first, so updates arrive; cache as offline fallback. */
+const VERSION = 'rb-v0.1.0';
+const FILES = [
+  './', 'index.html', 'manifest.webmanifest',
+  'shared/rb.js', 'shared/robin.js', 'shared/rb-theme.css',
+  'shared/fonts/atkinson-hyperlegible-latin-400-normal.woff2', 'shared/fonts/atkinson-hyperlegible-latin-700-normal.woff2',
+  'platform/app.js', 'apps/registry.js',
+  'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
+  // Diktat Trainer
+  'apps/diktat/js/rb-bridge.js', 'apps/diktat/index.html','apps/diktat/styles.css','apps/diktat/manifest.webmanifest','apps/diktat/js/compare.js','apps/diktat/js/sentences.js','apps/diktat/js/store.js','apps/diktat/js/speech.js','apps/diktat/js/practice.js','apps/diktat/js/app.js','apps/diktat/fonts/atkinson-hyperlegible-latin-400-normal.woff2','apps/diktat/fonts/atkinson-hyperlegible-latin-700-normal.woff2','apps/diktat/fonts/OpenDyslexic-Regular.woff','apps/diktat/fonts/OpenDyslexic-Bold.woff','apps/diktat/icons/icon.svg','apps/diktat/icons/icon-192.png','apps/diktat/icons/icon-512.png'
+];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
+    .then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request).then(r => {
+      const copy = r.clone();
+      caches.open(VERSION).then(c => c.put(e.request, copy));
+      return r;
+    }).catch(() => caches.match(e.request, { ignoreSearch: true }))
+  );
+});

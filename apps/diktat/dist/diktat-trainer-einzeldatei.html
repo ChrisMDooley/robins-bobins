@@ -88,6 +88,8 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding-block: calc(12px + env(safe-area-inset-top, 0px)) 12px; min-height: 64px; }
 .brand { font-weight: 700; color: var(--ink-soft); font-size: 0.95em; }
+.btn-link.back-apps { text-decoration: none; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.back-apps:not([hidden]) + .brand { margin-right: auto; }
 
 /* coins */
 .coins { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.15em;
@@ -263,6 +265,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   <!-- ============ HOME ============ -->
   <section id="home" class="screen">
     <header class="topbar">
+      <a id="btn-apps" class="btn-link back-apps" href="#" hidden>‹ Meine Apps</a>
       <span class="brand">Diktat-Trainer</span>
       <span class="coins" aria-live="polite"><span class="coin" aria-hidden="true"></span><span class="coin-balance">0</span></span>
     </header>
@@ -424,6 +427,58 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 </div>
 
 <script>
+/*
+ * rb-bridge.js — hands Diktat Trainer's coins and sessions to Robin's Bobins.
+ *
+ * Diktat keeps its own ledger (it existed before the platform). This bridge
+ * copies every Diktat coin entry and finished session into the child's
+ * platform ledger, using ids "diktat:<original id>". Copying is idempotent,
+ * so it can run as often as we like: after each award, on app start, and when
+ * the platform home opens. Nothing is ever removed from the platform ledger,
+ * so resetting Diktat's own history never takes a child's coins away.
+ *
+ * Loaded by Diktat itself and by the platform shell. Harmless without RB.
+ */
+(function (root) {
+  'use strict';
+  var PREFIX = 'diktat-trainer:';
+
+  function read(childId) {
+    try { var raw = root.localStorage.getItem(PREFIX + childId); return raw ? JSON.parse(raw) : null; }
+    catch (e) { return null; }
+  }
+
+  function sync(RB, childId, state) {
+    if (!RB) return 0;
+    state = state || read(childId);
+    if (!state) return 0;
+    var n = RB.coins.merge(childId, (state.coins || []).map(function (c) {
+      return { id: 'diktat:' + c.id, ts: c.ts, amount: c.amount, kind: 'earn', reason: c.reason, app: 'diktat', ref: c.sessionId || null };
+    }));
+    RB.activity.merge(childId, (state.sessions || []).filter(function (s) { return s.endedAt; }).map(function (s) {
+      return {
+        id: 'diktat:' + s.id, app: 'diktat', kind: 'session', startedAt: s.startedAt, endedAt: s.endedAt,
+        summary: { sentences: (s.sentenceIds || []).length, accuracy: s.accuracy, coins: s.coins }
+      };
+    }));
+    return n;
+  }
+
+  // One friendly line for the app card on the child's home screen.
+  function cardInfo(childId, now) {
+    var st = read(childId);
+    if (!st || !st.wordStats) return 'Hören, schreiben, verbessern';
+    now = now || Date.now();
+    var due = Object.keys(st.wordStats).filter(function (w) {
+      var s = st.wordStats[w]; return s.wrong > 0 && s.box < 5 && s.due <= now;
+    }).length;
+    if (due) return due === 1 ? '1 Wort zum Wiederholen' : due + ' Wörter zum Wiederholen';
+    return 'Hören, schreiben, verbessern';
+  }
+
+  root.RBDiktat = { sync: sync, cardInfo: cardInfo };
+})(typeof window !== 'undefined' ? window : globalThis);
+
 /*
  * compare.js — deterministic sentence comparison for the Diktat-Trainer.
  *
@@ -1175,7 +1230,17 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   'use strict';
   var DT = window.DT;
   var C = DT.compare, P = DT.practice, speech = DT.speech;
-  var store = DT.createStore(DT.localStorageAdapter(), 'lukas');
+  // Inside Robin's Bobins the platform says who is practising; on its own it is Lukas, as before.
+  var RB = window.RB || null;
+  var child = RB ? RB.requireChild() : null;
+  if (RB && !child) return;                       // requireChild() is already sending us to "Wer bist du?"
+  var childId = child ? child.id : 'lukas';
+  var store = DT.createStore(DT.localStorageAdapter(), childId);
+  if (child && store.state.profile.name !== child.name) { store.state.profile = { id: child.id, name: child.name }; store.save(); }
+
+  // Coins shown are the child's ONE Robin's Bobins balance; Diktat's own ledger is copied across.
+  function balance() { return RB ? RB.coins.balance(childId) : store.balance(); }
+  function syncPlatform() { if (RB && window.RBDiktat) window.RBDiktat.sync(RB, childId, store.state); }
   var $ = function (id) { return document.getElementById(id); };
 
   var session = null;   // current session (see practice.buildSession)
@@ -1202,7 +1267,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   }
 
   function updateCoins(bump) {
-    var b = store.balance();
+    var b = balance();
     document.querySelectorAll('.coin-balance').forEach(function (el) { el.textContent = b; });
     if (bump) document.querySelectorAll('.coins').forEach(function (el) {
       if (el.offsetParent === null) return;
@@ -1215,6 +1280,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   function award(amount, reason, anchorEl) {
     if (!amount) return;
     store.addCoins(amount, reason, { sessionId: session ? session.id : null });
+    syncPlatform();
     if (session) session.coins += amount;
     popQueue = popQueue.then(function () {
       return new Promise(function (res) {
@@ -1524,6 +1590,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
         sentenceIds: session.results.map(function (r) { return r.sentenceId; }),
         coins: session.coins, accuracy: b.accuracy });
     });
+    syncPlatform();
 
     var fixed = session.results.reduce(function (s, r) { return s + r.corrected; }, 0);
     var words = {};
@@ -1566,7 +1633,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
     $('set-spacing').checked = s.spacing === 'wide';
     $('set-length').value = String(s.sessionLength);
     $('data-help').textContent = (store.persistent ? 'Alle Daten bleiben auf diesem Gerät, in diesem Browser.' : 'Achtung: Dieser Browser speichert gerade nichts dauerhaft (privates Fenster?).') +
-      ' ' + store.state.attempts.length + ' Sätze geübt, ' + store.balance() + ' Münzen.';
+      ' ' + store.state.attempts.length + ' Sätze geübt, ' + balance() + (RB ? ' Robin-Münzen.' : ' Münzen.');
     $('backup-text').value = '';
     $('data-msg').textContent = '';
     $('reset-confirm').hidden = true;
@@ -1604,9 +1671,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       } catch (e) { $('data-msg').textContent = 'Herunterladen geht hier nicht – bitte „Sicherung kopieren“ nutzen.'; }
     });
     $('btn-import').addEventListener('click', function () {
-      try { store.importJSON($('backup-text').value); applyDisplaySettings(); $('data-msg').textContent = 'Sicherung wiederhergestellt.'; updateCoins(false); }
+      try { store.importJSON($('backup-text').value); syncPlatform(); applyDisplaySettings(); $('data-msg').textContent = 'Sicherung wiederhergestellt.'; updateCoins(false); }
       catch (e) { $('data-msg').textContent = 'Das ist keine gültige Sicherung. Bitte den ganzen Text einfügen.'; }
     });
+    if (RB) document.querySelector('#reset-confirm p').textContent = 'Wirklich den Übungsverlauf im Diktat-Trainer löschen? Die Robin-Münzen bleiben erhalten.';
     $('btn-reset').addEventListener('click', function () { $('reset-confirm').hidden = false; });
     $('btn-reset-no').addEventListener('click', function () { $('reset-confirm').hidden = true; });
     $('btn-reset-yes').addEventListener('click', function () {
@@ -1655,6 +1723,13 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 
   applyDisplaySettings();
   bind();
+  if (RB) {
+    syncPlatform();
+    document.title = 'Diktat-Trainer · ' + child.name;
+    $('btn-apps').hidden = false;
+    $('btn-apps').href = RB.nav.homeUrl(childId);
+    $('btn-apps').addEventListener('click', function () { speech.stop(); });
+  }
   renderHome();
 
   // Ask the browser not to evict our data (Safari clears unused site data after a while).
@@ -1662,7 +1737,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 
   // PWA: offline cache + installable. Only on http(s), never in a sandboxed preview.
   try {
-    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && window.self === window.top) {
+    // Inside Robin's Bobins the platform's service worker caches Diktat too.
+    if (!RB && 'serviceWorker' in navigator && /^https?:$/.test(location.protocol) && window.self === window.top) {
       navigator.serviceWorker.register('sw.js').catch(function () { /* optional */ });
     }
   } catch (e) { /* ignore */ }

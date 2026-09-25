@@ -22,7 +22,8 @@ css = re.sub(r"url\('([^']+)'\) format\('(woff2?)'\)", inline_font, css)
 
 html = read('index.html')
 body = html.split('<!--APP-START-->')[1].split('<!--APP-END-->')[0]
-scripts = re.findall(r'<script src="([^"]+)"></script>', html)
+# Platform scripts (../../shared/…) stay out: the single file runs standalone, as before.
+scripts = [s for s in re.findall(r'<script src="([^"]+)"></script>', html) if not s.startswith('../')]
 js = '\n'.join(read(s) for s in scripts)
 icon = 'data:image/svg+xml;base64,' + base64.b64encode(open(os.path.join(ROOT, 'icons/icon.svg'), 'rb').read()).decode()
 title = "<title>Lukas' Diktat-Trainer</title>"

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neue App · Robin's Bobins</title>
+<link rel="icon" href="../../icons/icon.svg" type="image/svg+xml">
+<!-- 1. The shared look (optional but recommended) -->
+<link rel="stylesheet" href="../../shared/rb-theme.css">
+<style>
+  /* App-specific styles go here (or in your own .css file). */
+  .task { display: flex; flex-direction: column; align-items: center; gap: 18px; padding-top: 40px; text-align: center; }
+  .question { font-size: 2.4em; font-weight: 700; margin: 0; }
+</style>
+</head>
+<body>
+<main class="shell">
+  <!-- 2. Every app has the same way home -->
+  <header class="bar">
+    <a class="rb-link" id="back" href="#">‹ Meine Apps</a>
+    <span class="rb-wordmark">Neue App</span>
+    <span class="rb-coins"><span class="rb-coin" aria-hidden="true"></span><span id="coins">0</span></span>
+  </header>
+
+  <section class="task">
+    <span id="robin"></span>
+    <p class="question">3 + 4 = ?</p>
+    <button class="rb-btn" id="done" type="button">Fertig geübt</button>
+    <p class="help" id="msg" aria-live="polite"></p>
+  </section>
+</main>
+
+<!-- 3. The platform SDK (+ Robin, if you want him) -->
+<script src="../../shared/rb.js"></script>
+<script src="../../shared/robin.js"></script>
+<script>
+(function () {
+  'use strict';
+  var APP = 'template';                 // must match the id in apps/registry.js
+
+  // Who is practising? (Sends the browser to "Wer bist du?" if nobody picked.)
+  var child = RB.requireChild();
+  if (!child) return;
+
+  // App-specific learning data lives under the app's OWN key (storagePrefix + child id).
+  var KEY = 'rb-template:' + child.id;
+  var data = JSON.parse(localStorage.getItem(KEY) || '{"rounds":0}');
+
+  document.getElementById('back').href = RB.nav.homeUrl(child.id);
+  document.getElementById('robin').appendChild(RB.robin.el('thinking', 110));
+  function showCoins() { document.getElementById('coins').textContent = RB.coins.balance(child.id); }
+  showCoins();
+
+  var started = Date.now();
+  document.getElementById('done').addEventListener('click', function () {
+    data.rounds++;
+    localStorage.setItem(KEY, JSON.stringify(data));
+
+    // Reward effort: coins go straight into the child's one Robin's Bobins balance.
+    RB.coins.add(child.id, { amount: 3, reason: 'Runde geschafft', app: APP });
+    // Tell the platform an activity happened (streak, "Übungen heute").
+    RB.activity.record(child.id, { app: APP, kind: 'session', startedAt: started, endedAt: Date.now(), summary: { rounds: 1 } });
+
+    showCoins();
+    document.getElementById('msg').textContent = 'Super gemacht, ' + child.name + '! +3 Münzen';
+    started = Date.now();
+  });
+})();
+</script>
+</body>
+</html>
