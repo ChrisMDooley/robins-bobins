@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lukas' Diktat-Trainer</title>
+<meta name="description" content="Hören, schreiben, prüfen, verbessern – Diktat üben in kurzen Runden.">
+<meta name="theme-color" content="#1F6F8B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Diktat">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!--APP-START-->
+<div id="app" class="app">
+
+  <!-- ============ HOME ============ -->
+  <section id="home" class="screen">
+    <header class="topbar">
+      <span class="brand">Diktat-Trainer</span>
+      <span class="coins" aria-live="polite"><span class="coin" aria-hidden="true"></span><span class="coin-balance">0</span></span>
+    </header>
+    <div class="home-body">
+      <h1 class="hello">Hallo <span id="home-name">Lukas</span>!</h1>
+      <p class="home-sub" id="home-sub">Hören, schreiben, prüfen, verbessern.</p>
+      <div class="home-stats">
+        <div class="stat"><span class="stat-num" id="home-streak">0</span><span class="stat-label" id="home-streak-label">Tage in Folge</span></div>
+        <div class="stat"><span class="stat-num" id="home-words">0</span><span class="stat-label">Wörter zum Wiederholen</span></div>
+      </div>
+      <button id="btn-start" class="btn btn-primary btn-huge" type="button">Los geht's! <span class="btn-sub" id="start-sub">10 Sätze</span></button>
+      <p class="notice" id="speech-notice" hidden></p>
+    </div>
+    <footer class="home-foot">
+      <button id="btn-settings" class="btn-link" type="button">Einstellungen (Eltern)</button>
+    </footer>
+  </section>
+
+  <!-- ============ PRACTICE ============ -->
+  <section id="practice" class="screen" hidden>
+    <header class="topbar">
+      <button id="btn-quit" class="btn-link" type="button" aria-label="Übung beenden">Beenden</button>
+      <div class="progress" aria-label="Fortschritt"><div class="dots" id="dots"></div><span class="progress-text" id="progress-text">1 / 10</span></div>
+      <span class="coins" aria-live="polite"><span class="coin" aria-hidden="true"></span><span class="coin-balance">0</span></span>
+    </header>
+
+    <div class="practice-body">
+      <!-- listen -->
+      <div class="listen">
+        <button id="btn-play" class="play" type="button" aria-label="Satz anhören">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M17 11.5v25a1.5 1.5 0 0 0 2.3 1.26l19.6-12.5a1.5 1.5 0 0 0 0-2.52L19.3 10.24A1.5 1.5 0 0 0 17 11.5z"/></svg>
+        </button>
+        <div class="listen-side">
+          <button id="btn-replay" class="btn btn-soft" type="button" title="Nochmal (Esc)">Nochmal</button>
+          <button id="btn-slow" class="btn btn-soft" type="button" title="Langsam (Shift + Esc)">Langsam</button>
+        </div>
+      </div>
+      <p class="listen-status" id="listen-status" aria-live="polite">Hör gut zu.</p>
+
+      <!-- write -->
+      <div id="write-area" class="write-area">
+        <label for="answer" class="label">Schreib den Satz:</label>
+        <textarea id="answer" class="answer" rows="2" lang="de"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          enterkeyhint="done"></textarea>
+        <button id="btn-check" class="btn btn-primary btn-big" type="button" disabled>Prüfen</button>
+      </div>
+
+      <!-- feedback -->
+      <div id="feedback" class="feedback" hidden>
+        <p class="fb-head" id="fb-head"></p>
+        <p class="target" id="fb-target"></p>
+        <details class="mine"><summary>Meine Version</summary><p id="fb-typed"></p></details>
+        <ol class="fixes" id="fb-fixes"></ol>
+        <div class="fb-actions">
+          <button id="btn-next" class="btn btn-primary btn-big" type="button">Weiter</button>
+          <button id="btn-skip" class="btn-link" type="button" hidden>Später verbessern</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SUMMARY ============ -->
+  <section id="summary" class="screen" hidden>
+    <header class="topbar">
+      <span class="brand">Geschafft</span>
+      <span class="coins" aria-live="polite"><span class="coin" aria-hidden="true"></span><span class="coin-balance">0</span></span>
+    </header>
+    <div class="summary-body">
+      <h1 class="sum-title" id="sum-title">Super gemacht!</h1>
+      <div class="sum-grid">
+        <div class="stat"><span class="stat-num" id="sum-sentences">0</span><span class="stat-label">Sätze geübt</span></div>
+        <div class="stat"><span class="stat-num" id="sum-acc">0%</span><span class="stat-label">Wörter richtig</span></div>
+        <div class="stat"><span class="stat-num" id="sum-fixed">0</span><span class="stat-label">Wörter verbessert</span></div>
+        <div class="stat stat-coins"><span class="stat-num" id="sum-coins">+0</span><span class="stat-label">Münzen</span></div>
+      </div>
+      <ul class="bonus-list" id="sum-bonus"></ul>
+      <div id="sum-words-wrap" hidden>
+        <h2 class="sum-h2">Diese Wörter üben wir bald wieder:</h2>
+        <ul class="chips" id="sum-words"></ul>
+      </div>
+      <div class="sum-actions">
+        <button id="btn-again" class="btn btn-primary btn-big" type="button">Noch eine Runde</button>
+        <button id="btn-home" class="btn btn-soft btn-big" type="button">Fertig</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS (parent) ============ -->
+  <section id="settings" class="screen" hidden>
+    <header class="topbar">
+      <button id="btn-settings-close" class="btn-link" type="button">Zurück</button>
+      <span class="brand">Einstellungen</span>
+      <span></span>
+    </header>
+    <div class="settings-body">
+      <fieldset>
+        <legend>Stimme</legend>
+        <label for="set-voice">Deutsche Stimme auf diesem Gerät</label>
+        <select id="set-voice"></select>
+        <p class="help" id="voice-help"></p>
+        <label for="set-rate">Sprechtempo: <output id="rate-out">0.9</output></label>
+        <input type="range" id="set-rate" min="0.6" max="1.1" step="0.05">
+        <label for="set-slow">Tempo „Langsam“: <output id="slow-out">0.6</output></label>
+        <input type="range" id="set-slow" min="0.4" max="0.8" step="0.05">
+        <button id="btn-voice-test" class="btn btn-soft" type="button">Stimme testen</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Schrift</legend>
+        <label for="set-font">Schriftart</label>
+        <select id="set-font">
+          <option value="atkinson">Atkinson Hyperlegible (empfohlen)</option>
+          <option value="opendyslexic">OpenDyslexic</option>
+          <option value="system">Systemschrift</option>
+        </select>
+        <label for="set-size">Schriftgröße: <output id="size-out">100%</output></label>
+        <input type="range" id="set-size" min="0.9" max="1.5" step="0.05">
+        <label class="check"><input type="checkbox" id="set-spacing"> Extra Zeilen- und Buchstabenabstand</label>
+        <p class="preview-text">Beim Laufen bekomme ich Seitenstiche.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Übung</legend>
+        <label for="set-length">Sätze pro Runde</label>
+        <select id="set-length">
+          <option value="5">5</option><option value="8">8</option><option value="10">10</option>
+          <option value="12">12</option><option value="15">15</option>
+        </select>
+      </fieldset>
+
+      <fieldset>
+        <legend>Daten</legend>
+        <p class="help" id="data-help"></p>
+        <div class="row">
+          <button id="btn-export" class="btn btn-soft" type="button">Sicherung kopieren</button>
+          <button id="btn-download" class="btn btn-soft" type="button">Sicherung herunterladen</button>
+        </div>
+        <label for="backup-text">Sicherung (zum Wiederherstellen hier einfügen)</label>
+        <textarea id="backup-text" rows="4" spellcheck="false"></textarea>
+        <div class="row">
+          <button id="btn-import" class="btn btn-soft" type="button">Wiederherstellen</button>
+          <button id="btn-reset" class="btn btn-soft" type="button">Alles zurücksetzen</button>
+        </div>
+        <div id="reset-confirm" class="confirm" hidden>
+          <p>Wirklich alle Münzen und den Übungsverlauf löschen?</p>
+          <div class="row">
+            <button id="btn-reset-yes" class="btn btn-soft" type="button">Ja, löschen</button>
+            <button id="btn-reset-no" class="btn btn-primary" type="button">Nein</button>
+          </div>
+        </div>
+        <p class="help" id="data-msg" aria-live="polite"></p>
+      </fieldset>
+      <p class="help">Elternbereich mit PIN, Belohnungsshop, eigene Sätze und Statistik kommen in Version 2.</p>
+    </div>
+  </section>
+
+  <div id="pop-layer" class="pop-layer" aria-hidden="true"></div>
+</div>
+<!--APP-END-->
+<script src="js/compare.js"></script>
+<script src="js/sentences.js"></script>
+<script src="js/store.js"></script>
+<script src="js/speech.js"></script>
+<script src="js/practice.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
