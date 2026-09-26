@@ -25,6 +25,19 @@
     bridge: 'RBDiktat'
   });
 
+  // Sachunterricht: Bundesländer, Wappen, Nachbarländer, Hessen, Kartenkunde (for Alex, Klasse 4).
+  R.register({
+    id: 'geo',
+    title: 'Deutschland & Hessen',
+    subject: 'Sachunterricht',
+    icon: '🗺️',
+    color: '#3E8A5E',
+    path: 'apps/geo/index.html',
+    storagePrefix: 'rb-geo:',
+    bridge: 'RBGeo',
+    grantTo: ['alex']        // switched on for Alex once; Elternbereich can change it afterwards
+  });
+
   // Starter for new apps. Hidden from children; open apps/_template/?child=lukas to try it.
   R.register({
     id: 'template',

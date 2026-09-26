@@ -11,6 +11,8 @@
    The `id` is stored in coin and activity records, so never rename it.
 3. **Cache it offline:** add the app's files to `FILES` in the root `sw.js` and bump `VERSION`.
 4. **Give it to a child:** Elternbereich → tick the app next to the child's name.
+   Or add `grantTo: ['alex']` to the registry entry: the app is switched on for that child once, and
+   Elternbereich decides from then on (un-ticking is respected).
 
 ## What the app gets from the platform
 
@@ -36,4 +38,5 @@ Link `../../shared/rb-theme.css` for the shared look (tokens `--rb-*`, `.rb-btn`
 - **Record one activity per finished session** so streaks and "Übungen heute" count it.
 - **Give each record an id** (`RB.uid('x')`) and never edit history in place — that keeps later multi-device sync easy.
 - **Keep Robin quiet inside the app.** A short line at the start or end is plenty.
+- **Show a line on the home card** (optional): a bridge global with `cardInfo(childId)` — see `apps/geo/js/rb-bridge.js`, loaded from the root `index.html`.
 - **Test with a real flow** — see `tests/platform_e2e.py` for how to drive a whole session in headless Chromium.

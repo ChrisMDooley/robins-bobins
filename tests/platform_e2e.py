@@ -111,11 +111,12 @@ with sync_playwright() as p:
     pg.goto(URL + 'apps/diktat/index.html'); pg.wait_for_timeout(500)
     check('Diktat without child → picker', pg.url.endswith('index.html#/'), pg.url)
 
-    # Alex and Liliana: no apps yet
+    # Alex got his geography app once (grantTo); Liliana has no apps yet
     pg.goto(URL + 'index.html#/c/alex'); pg.wait_for_timeout(200)
-    check('Alex empty state', pg.locator('.empty').count() == 1)
+    check('Alex has Deutschland & Hessen', pg.locator('.app-card[data-app=geo]').count() == 1)
     check('Alex has 0 coins', pg.evaluate("RB.coins.balance('alex')") == 0)
     pg.goto(URL + 'index.html#/c/liliana'); pg.wait_for_timeout(200)
+    check('Liliana empty state', pg.locator('.empty').count() == 1)
     check('Liliana simple UI', pg.evaluate("document.documentElement.className") == 'ui-simple')
     pg.screenshot(path=f'{OUT}/rb-6-liliana-home.png')
 
@@ -124,6 +125,12 @@ with sync_playwright() as p:
     pg.fill('#pin1', '1234'); pg.fill('#pin2', '1234'); pg.click('#pin-form button'); pg.wait_for_timeout(200)
     check('parent area opens', 'Kinder und Apps' in pg.inner_text('body'))
     pg.check('input[data-child=alex][data-app=diktat]'); pg.wait_for_timeout(100)
+    pg.uncheck('input[data-child=alex][data-app=geo]'); pg.wait_for_timeout(100)
+    pg.reload(); pg.wait_for_timeout(200)
+    check('un-ticked app stays off (grant only once)', pg.evaluate("RB.child('alex').apps.indexOf('geo')") == -1)
+    pg.goto(URL + 'index.html#/eltern'); pg.wait_for_timeout(200)
+    if pg.locator('#pin1').count(): pg.fill('#pin1', '1234'); pg.click('#pin-form button'); pg.wait_for_timeout(200)
+    pg.check('input[data-child=alex][data-app=geo]'); pg.wait_for_timeout(100)
     pg.screenshot(path=f'{OUT}/rb-7-parent.png', full_page=True)
     exported = pg.evaluate("RB.backup.exportAll()")
     check('backup has platform, child and app data',

@@ -267,6 +267,22 @@
     register: function (def) { registry = registry.filter(function (a) { return a.id !== def.id; }); registry.push(def); },
     list: function () { return registry.slice(); },
     get: function (id) { return registry.filter(function (a) { return a.id === id; })[0] || null; },
+    // An app may name children it is meant for (grantTo). It is switched on for them ONCE;
+    // after that Parent Mode decides (un-ticking it is remembered and respected).
+    applyGrants: function () {
+      var p = freshPlatform(), changed = false;
+      p.settings.granted = p.settings.granted || {};
+      registry.forEach(function (a) {
+        if (!a.grantTo || p.settings.granted[a.id]) return;
+        a.grantTo.forEach(function (cid) {
+          var c = p.children.filter(function (x) { return x.id === cid; })[0];
+          if (c && c.apps.indexOf(a.id) === -1) c.apps.push(a.id);
+        });
+        p.settings.granted[a.id] = Date.now(); changed = true;
+      });
+      if (changed) savePlatform();
+      return changed;
+    },
     forChild: function (childId) {
       var c = child(childId);
       if (!c) return [];
@@ -330,7 +346,7 @@
   };
 
   root.RB = {
-    VERSION: '0.1.0',
+    VERSION: '0.2.0',
     persistent: adapter.persistent,
     uid: uid,
     dayKey: dayKey,

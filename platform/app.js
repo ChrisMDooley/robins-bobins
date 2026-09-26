@@ -29,6 +29,9 @@
   }
   function syncAll() { RB.children().forEach(function (c) { syncChild(c.id); }); }
 
+  // New apps meant for a particular child appear for them once (see RB.apps.applyGrants).
+  try { RB.apps.applyGrants(); } catch (e) { console.warn('grants failed', e); }
+
   // ---------- Wer bist du? ----------
 
   function renderPicker() {
