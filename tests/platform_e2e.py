@@ -41,6 +41,12 @@ LEGACY = {
     'wordStats': {'Seitenstiche': {'seen': 1, 'wrong': 1, 'box': 1, 'due': yesterday, 'lastWrong': yesterday}}, 'rewards': []
 }
 
+
+# The whole site sits behind the family PIN (shared/rb.js). Tests use the stored unlock token
+# (the public hash), never the PIN itself.
+GATE_HASH = '4ebcd3627a683a15bd0f1adac7532e9fa2d78ce6bc85276fbd8cc423c3e4b70a'
+UNLOCK = "try { localStorage.setItem('rb:gate', '%s'); } catch (e) {}" % GATE_HASH
+
 errors, ok = [], []
 def check(name, cond, info=''):
     (ok if cond else errors).append(name + ('' if cond else f'  → {info}'))
@@ -51,6 +57,25 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errors.append('pageerror: ' + str(e)))
     pg.on('console', lambda m: m.type == 'error' and errors.append('console: ' + m.text))
     pg.add_init_script(MOCK)
+
+    # ---------- family PIN gate (fresh browser, nothing stored) ----------
+    gp = b.new_page(viewport={'width': 1280, 'height': 860})
+    gp.on('pageerror', lambda e: errors.append('gate pageerror: ' + str(e)))
+    for path in ('index.html', 'apps/geo/index.html?child=alex', 'apps/diktat/index.html?child=lukas'):
+        gp.goto(URL + path); gp.wait_for_timeout(300)
+        check('gate shown on ' + path, gp.locator('#rb-gate').is_visible())
+        check('content hidden behind gate on ' + path,
+              gp.evaluate("[...document.body.children].filter(e => e.id !== 'rb-gate' && e.tagName !== 'SCRIPT' && e.tagName !== 'NOSCRIPT' && getComputedStyle(e).visibility === 'visible').length") == 0)
+    gp.fill('#rb-gate input', '000000'); gp.press('#rb-gate input', 'Enter'); gp.wait_for_timeout(150)
+    check('wrong family PIN refused', 'stimmt nicht' in gp.inner_text('#rb-gate .msg') and gp.locator('#rb-gate').count() == 1)
+    if os.environ.get('RB_TEST_PIN'):
+        check('PIN not in page source', os.environ['RB_TEST_PIN'] not in gp.content())
+        gp.fill('#rb-gate input', os.environ['RB_TEST_PIN']); gp.press('#rb-gate input', 'Enter'); gp.wait_for_timeout(300)
+        check('right family PIN opens the app', gp.locator('#rb-gate').count() == 0 and 'Hallo Lukas' in gp.inner_text('body'))
+        gp.goto(URL + 'index.html'); gp.wait_for_timeout(300)
+        check('device remembered after unlock', gp.locator('#rb-gate').count() == 0)
+    gp.close()
+    pg.add_init_script(UNLOCK)
 
     pg.goto(URL + 'index.html')
     pg.evaluate(f"localStorage.clear(); localStorage.setItem('diktat-trainer:lukas', {json.dumps(json.dumps(LEGACY))})")

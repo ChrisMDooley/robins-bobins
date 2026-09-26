@@ -345,6 +345,103 @@
     }
   };
 
+
+  // ---------- family PIN gate ----------
+  // A lock screen in front of every page that loads this SDK (platform + all apps).
+  // Only a salted SHA-256 of the PIN is stored here, never the PIN itself. Once entered,
+  // the device is remembered (localStorage 'rb:gate') until "Dieses Gerät abmelden".
+  // HONEST LIMIT: this is a door, not a safe. The site is static and public, so anyone
+  // who reads the source code can see everything that is in it.
+  var GATE_SALT = 'robins-bobins-family:e3663b0217e072a5:';
+  var GATE_HASH = '4ebcd3627a683a15bd0f1adac7532e9fa2d78ce6bc85276fbd8cc423c3e4b70a';
+  var GATE_KEY = 'rb:gate';
+
+  // Small synchronous SHA-256 (works on file:// and old browsers, no crypto.subtle needed).
+  function sha256(str) {
+    var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,
+      0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+      0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,
+      0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+      0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,
+      0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    var bytes = unescape(encodeURIComponent(str)), l = bytes.length, words = [], i;
+    for (i = 0; i < l; i++) words[i >> 2] |= (bytes.charCodeAt(i) & 0xff) << (24 - (i % 4) * 8);
+    words[l >> 2] |= 0x80 << (24 - (l % 4) * 8);
+    words[(((l + 8) >> 6) + 1) * 16 - 1] = l * 8;
+    var H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19], W = [];
+    function r(x, n) { return (x >>> n) | (x << (32 - n)); }
+    for (var j = 0; j < words.length; j += 16) {
+      var a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+      for (i = 0; i < 64; i++) {
+        if (i < 16) W[i] = words[j + i] | 0;
+        else W[i] = (r(W[i-2],17) ^ r(W[i-2],19) ^ (W[i-2] >>> 10)) + W[i-7] + (r(W[i-15],7) ^ r(W[i-15],18) ^ (W[i-15] >>> 3)) + W[i-16] | 0;
+        var t1 = h + (r(e,6) ^ r(e,11) ^ r(e,25)) + ((e & f) ^ (~e & g)) + K[i] + W[i] | 0;
+        var t2 = (r(a,2) ^ r(a,13) ^ r(a,22)) + ((a & b) ^ (a & c) ^ (b & c)) | 0;
+        h = g; g = f; f = e; e = d + t1 | 0; d = c; c = b; b = a; a = t1 + t2 | 0;
+      }
+      H[0] = H[0] + a | 0; H[1] = H[1] + b | 0; H[2] = H[2] + c | 0; H[3] = H[3] + d | 0;
+      H[4] = H[4] + e | 0; H[5] = H[5] + f | 0; H[6] = H[6] + g | 0; H[7] = H[7] + h | 0;
+    }
+    return H.map(function (x) { return ('00000000' + (x >>> 0).toString(16)).slice(-8); }).join('');
+  }
+
+  var gate = {
+    unlocked: function () { return adapter.read(GATE_KEY) === GATE_HASH; },
+    check: function (pin) { return sha256(GATE_SALT + String(pin).trim()) === GATE_HASH; },
+    unlock: function (pin) {
+      if (!gate.check(pin)) return false;
+      adapter.write(GATE_KEY, GATE_HASH);
+      return true;
+    },
+    lock: function () { try { root.localStorage.removeItem(GATE_KEY); } catch (e) { /* ignore */ } }
+  };
+
+  function showGate() {
+    if (!root.document || gate.unlocked()) return;
+    var doc = root.document, html = doc.documentElement;
+    html.setAttribute('data-rb-locked', '');
+    var css = doc.createElement('style');
+    css.textContent =
+      'html[data-rb-locked] body > :not(#rb-gate){visibility:hidden!important}' +
+      '#rb-gate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;' +
+      'background:#FBF5EC;font-family:"Atkinson Hyperlegible",system-ui,sans-serif;color:#2A2530}' +
+      '#rb-gate form{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;max-width:340px;width:100%}' +
+      '#rb-gate h1{margin:0;font-size:1.9em}#rb-gate h1 b{color:#E0673B}#rb-gate p{margin:0;color:#6E6472}' +
+      '#rb-gate input{font-size:2em;letter-spacing:.4em;text-align:center;width:8.5em;padding:10px 0 10px .4em;border:2px solid #EADCCB;' +
+      'border-radius:14px;background:#fff;font-family:inherit}#rb-gate input:focus{outline:none;border-color:#E0673B}' +
+      '#rb-gate button{border:0;border-radius:14px;padding:12px 28px;min-height:48px;font-weight:700;font-size:1.05em;font-family:inherit;' +
+      'background:#E0673B;color:#fff;cursor:pointer}#rb-gate .msg{min-height:1.4em;color:#C9542B;font-weight:700}' +
+      '#rb-gate .robin{width:120px;height:120px;display:block}#rb-gate .robin svg{width:100%;height:100%}' +
+      '@keyframes rbshake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}#rb-gate .shake{animation:rbshake .4s}';
+    (doc.head || html).appendChild(css);
+    function build() {
+      if (doc.getElementById('rb-gate')) return;
+      var box = doc.createElement('div');
+      box.id = 'rb-gate';
+      box.innerHTML = '<form autocomplete="off"><span class="robin" aria-hidden="true"></span>' +
+        '<h1>Robin’s <b>Bobins</b></h1><p>Bitte die Familien-PIN eingeben.</p>' +
+        '<input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="12" aria-label="Familien-PIN" autofocus>' +
+        '<button type="submit">Los geht’s</button><p class="msg" aria-live="polite"></p></form>';
+      doc.body.appendChild(box);
+      var form = box.querySelector('form'), input = box.querySelector('input'), msg = box.querySelector('.msg');
+      try { if (root.RB && root.RB.robin) box.querySelector('.robin').innerHTML = root.RB.robin.svg('normal'); } catch (e) { /* ignore */ }
+      // robin.js loads after this file: draw him once everything is there
+      root.addEventListener('load', function () { try { if (root.RB && root.RB.robin) box.querySelector('.robin').innerHTML = root.RB.robin.svg('normal'); } catch (e) {} });
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        if (gate.unlock(input.value)) {
+          box.remove(); html.removeAttribute('data-rb-locked');
+          try { root.dispatchEvent(new CustomEvent('rb:unlocked')); } catch (e) { /* ignore */ }
+        } else {
+          msg.textContent = 'Die PIN stimmt nicht.';
+          input.value = ''; form.classList.remove('shake'); void form.offsetWidth; form.classList.add('shake'); input.focus();
+        }
+      });
+      input.focus();
+    }
+    if (doc.body) build(); else doc.addEventListener('DOMContentLoaded', build);
+  }
+
   root.RB = {
     VERSION: '0.2.0',
     persistent: adapter.persistent,
@@ -363,6 +460,8 @@
     nav: nav,
     parent: parent,
     backup: backup,
+    gate: gate,
     _merge: merge
   };
+  showGate();
 })(typeof window !== 'undefined' ? window : globalThis);

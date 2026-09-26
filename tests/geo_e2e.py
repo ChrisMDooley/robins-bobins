@@ -20,6 +20,12 @@ srv = http.server.ThreadingHTTPServer(('127.0.0.1', 8767), functools.partial(Qui
 threading.Thread(target=srv.serve_forever, daemon=True).start()
 URL = 'http://127.0.0.1:8767/'
 
+
+# The whole site sits behind the family PIN (shared/rb.js). Tests use the stored unlock token
+# (the public hash), never the PIN itself.
+GATE_HASH = '4ebcd3627a683a15bd0f1adac7532e9fa2d78ce6bc85276fbd8cc423c3e4b70a'
+UNLOCK = "try { localStorage.setItem('rb:gate', '%s'); } catch (e) {}" % GATE_HASH
+
 errors, ok = [], []
 def check(name, cond, info=''):
     (ok if cond else errors).append(name + ('' if cond else f'  → {info}'))
@@ -80,6 +86,7 @@ def feedback_ok(pg):
 with sync_playwright() as p:
     b = p.chromium.launch()
     pg = b.new_page(viewport={'width': 1280, 'height': 900})
+    pg.add_init_script(UNLOCK)
     pg.on('pageerror', lambda e: errors.append('pageerror: ' + str(e)))
     pg.on('console', lambda m: m.type == 'error' and errors.append('console: ' + m.text))
 
@@ -247,6 +254,7 @@ with sync_playwright() as p:
 
     # ---------- phone ----------
     ph = b.new_page(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True)
+    ph.add_init_script(UNLOCK)
     ph.on('pageerror', lambda e: errors.append('phone pageerror: ' + str(e)))
     ph.goto(URL + 'apps/geo/index.html?child=alex'); ph.wait_for_timeout(300)
     ph.screenshot(path=f'{OUT}/geo-P-home.png', full_page=True)

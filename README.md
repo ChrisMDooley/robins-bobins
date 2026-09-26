@@ -16,6 +16,8 @@ The platform handles who is practising, navigation, Robin, one coin balance per 
 
 ## Privacy
 
+**Family PIN:** every page (platform and apps) opens behind a family PIN screen (`shared/rb.js`). Only a salted SHA-256 hash is in the code; once entered, a device stays unlocked until *Elternbereich → Dieses Gerät abmelden*. To change the PIN, replace `GATE_HASH` (and ideally `GATE_SALT`) in `shared/rb.js`. This is a door, not a safe: the site and repo are public, so anything written in the code (e.g. children's names) can still be read there.
+
 Local-first: everything stays in the browser on the device. No accounts, analytics, trackers, ads or third-party requests (fonts are bundled). Backups: *Eltern → Sicherung herunterladen*.
 
 ## Docs

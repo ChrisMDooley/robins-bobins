@@ -171,6 +171,9 @@
           '<textarea id="bk-text" class="backup" spellcheck="false"></textarea>' +
           '<div class="row"><button class="rb-btn rb-btn-soft" id="bk-import" type="button">Wiederherstellen</button></div>' +
           '<p class="help" id="bk-msg" aria-live="polite"></p></div>' +
+        '<div class="panel"><h2>Familien-PIN</h2><p class="help">Dieses Gerät ist freigeschaltet. Abmelden, wenn es jemand anderem gehört ' +
+          '(danach fragt die Seite wieder nach der Familien-PIN).</p>' +
+          '<div class="row"><button class="rb-btn rb-btn-soft" id="gate-lock" type="button">Dieses Gerät abmelden</button></div></div>' +
         '<div class="panel"><h2>Kommt als Nächstes</h2><p class="help">Robin’s Shop (Belohnungen, Einlösen mit PIN), ' +
           'Münzen korrigieren, Übungsziele, Statistik pro App, Namen/Farben der Kinder ändern.</p></div>' +
       '</section>';
@@ -183,6 +186,7 @@
         });
       });
     });
+    document.getElementById('gate-lock').addEventListener('click', function () { RB.gate.lock(); location.reload(); });
     var msg = document.getElementById('bk-msg');
     function json() { return JSON.stringify(RB.backup.exportAll(), null, 2); }
     document.getElementById('bk-download').addEventListener('click', function () {
