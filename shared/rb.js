@@ -353,7 +353,7 @@
   // HONEST LIMIT: this is a door, not a safe. The site is static and public, so anyone
   // who reads the source code can see everything that is in it.
   var GATE_SALT = 'robins-bobins-family:e3663b0217e072a5:';
-  var GATE_HASH = '4ebcd3627a683a15bd0f1adac7532e9fa2d78ce6bc85276fbd8cc423c3e4b70a';
+  var GATE_HASH = 'c623d5d8fdd2353ef1861b66169370d4a168aeb62f94cf63e08da88cddb06639';
   var GATE_KEY = 'rb:gate';
 
   // Small synchronous SHA-256 (works on file:// and old browsers, no crypto.subtle needed).

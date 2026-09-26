@@ -44,7 +44,7 @@ LEGACY = {
 
 # The whole site sits behind the family PIN (shared/rb.js). Tests use the stored unlock token
 # (the public hash), never the PIN itself.
-GATE_HASH = '4ebcd3627a683a15bd0f1adac7532e9fa2d78ce6bc85276fbd8cc423c3e4b70a'
+GATE_HASH = 'c623d5d8fdd2353ef1861b66169370d4a168aeb62f94cf63e08da88cddb06639'
 UNLOCK = "try { localStorage.setItem('rb:gate', '%s'); } catch (e) {}" % GATE_HASH
 
 errors, ok = [], []
