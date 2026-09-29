@@ -1,5 +1,5 @@
 /* sw.js — offline cache for the app shell. Bump VERSION on every release. */
-const VERSION = 'diktat-v1.0.0';
+const VERSION = 'diktat-v1.1.0';
 const FILES = [
   './', 'index.html', 'styles.css', 'manifest.webmanifest',
   'js/compare.js', 'js/sentences.js', 'js/store.js', 'js/speech.js', 'js/practice.js', 'js/app.js',

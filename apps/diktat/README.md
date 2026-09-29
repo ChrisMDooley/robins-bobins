@@ -80,3 +80,11 @@ Everything stays in the browser on this device. There is no analytics, no tracki
 
 - **Milestone 2:** parent area behind a PIN; own sentences, pasted texts split into sentences, Lernwörter lists; reward shop (save-toward goal, redeem by parent); progress statistics.
 - **Later:** optional cloud sync; recorded audio; LLM-generated practice sentences for problem words.
+
+## Themen (seit Sept 2026)
+
+Auf dem Startbildschirm wählt Lukas, was er üben möchte: **Alles gemischt**, **Rechtschreibung**
+(die ursprünglichen 50 Sätze) oder eines der Geschichtsthemen aus Klasse 6 — **Zeit & Geschichte**,
+**Steinzeit**, **Bronzezeit** (je 14 Sätze, nach den Themen seines Geschichtsbuchs selbst formuliert).
+Die Wahl wird gespeichert. Neue Themen: in `js/sentences.js` einen Eintrag in `HISTORY` und `SECTIONS`
+ergänzen; Sätze immer am Ende eines Themas anhängen (die Ids `<thema>-<n>` hängen an der Reihenfolge).

@@ -23,6 +23,7 @@
     voiceName: '',         // '' = best available German voice
     rate: 0.9,
     slowRate: 0.6,
+    section: 'alle',     // chosen on the home screen: 'alle' or a section id from sentences.js
     coinValues: {
       sentence: 2,         // finishing a sentence (always)
       perfect: 3,          // sentence right first time

@@ -1,6 +1,6 @@
 /* sw.js — Robin's Bobins offline cache (covers the platform AND every app).
    Bump VERSION on every release. Network first, so updates arrive; cache as offline fallback. */
-const VERSION = 'rb-v0.2.2';
+const VERSION = 'rb-v0.2.3';
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
   'shared/rb.js', 'shared/robin.js', 'shared/rb-theme.css',

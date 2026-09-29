@@ -119,6 +119,19 @@ button, input, select, textarea { font: inherit; color: inherit; letter-spacing:
 .stat-num { font-size: 1.7em; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .stat-label { font-size: .85em; color: var(--ink-soft); }
 .home-foot { text-align: center; }
+/* Thema wählen */
+.sections-wrap { width: 100%; max-width: 560px; }
+.sections-h { font-size: 1em; margin: 0 0 10px; color: var(--ink-soft); font-weight: 700; }
+.sections { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.section { display: flex; align-items: center; gap: 10px; text-align: left; padding: 12px 14px; min-height: 64px; cursor: pointer;
+  background: var(--surface); color: var(--ink); border: 2px solid var(--line); border-radius: 16px; font: inherit; }
+.section:hover { border-color: var(--accent); }
+.section.is-on { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.section-icon { font-size: 1.5em; line-height: 1; flex: none; }
+.section-text { display: flex; flex-direction: column; min-width: 0; }
+.section-title { font-weight: 700; line-height: 1.2; }
+.section-sub { font-size: .8em; color: var(--ink-soft); line-height: 1.3; }
+@media (max-width: 480px) { .sections { grid-template-columns: 1fr; } }
 .notice { background: var(--sp-bg); color: var(--sp-ink); border-radius: 12px; padding: 10px 14px; font-size: .9em; max-width: 480px; }
 
 /* ---------- practice ---------- */
@@ -267,6 +280,10 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       <div class="home-stats">
         <div class="stat"><span class="stat-num" id="home-streak">0</span><span class="stat-label" id="home-streak-label">Tage in Folge</span></div>
         <div class="stat"><span class="stat-num" id="home-words">0</span><span class="stat-label">Wörter zum Wiederholen</span></div>
+      </div>
+      <div class="sections-wrap">
+        <h2 class="sections-h">Was möchtest du üben?</h2>
+        <div id="sections" class="sections" role="group" aria-label="Thema wählen"></div>
       </div>
       <button id="btn-start" class="btn btn-primary btn-huge" type="button">Los geht's! <span class="btn-sub" id="start-sub">10 Sätze</span></button>
       <p class="notice" id="speech-notice" hidden></p>
@@ -768,11 +785,19 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 })(typeof window !== 'undefined' ? window : globalThis);
 
 /*
- * sentences.js — built-in practice sentences (Klasse 5/6).
- * Same cast of characters as the worksheets (Lukas, Mia, Tim, Frau Berger,
- * Herr Weber, Oma, Opa). Tags group sentences by spelling topic so the parent
- * area can later select topics. Parent-added sentences live in the store,
- * not here.
+ * sentences.js — built-in practice sentences (Klasse 5/6), grouped in SECTIONS
+ * that Lukas can choose on the home screen.
+ *
+ *   rechtschreibung  the original 50 spelling sentences (same cast as the worksheets:
+ *                    Lukas, Mia, Tim, Frau Berger, Herr Weber, Oma, Opa). Ids b1…b50, never renumber.
+ *   zeit, steinzeit, bronzezeit
+ *                    Geschichte, Klasse 6 — written for dictation practice from the topics of his
+ *                    history book ("Erste Begegnung mit Geschichte", "Wie messen Menschen die Zeit?",
+ *                    "Leben in der Frühzeit", Himmelsscheibe von Nebra). Own wording, not book text.
+ *                    Ids <section>-<n>, stable — add new sentences at the END of a section.
+ *
+ * Tags mark spelling topics inside a sentence (for later topic selection in the parent area).
+ * Parent-added sentences live in the store (section 'eigene'), not here.
  */
 (function (root) {
   'use strict';
@@ -840,10 +865,77 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
     ['Weil es so kalt war, zog Lukas eine Mütze auf.', 'komma ü']
   ];
 
-  root.DT = root.DT || {};
-  root.DT.builtinSentences = S.map(function (s, i) {
-    return { id: 'b' + (i + 1), text: s[0], tags: s[1].split(' '), source: 'builtin' };
+  // ---------- Geschichte (Klasse 6) ----------
+  var HISTORY = {
+    zeit: [
+      ['Geschichte beginnt schon bei uns selbst und bei unserer Familie.', 'ie gross'],
+      ['Auch unser Wohnort und unser Bundesland haben eine lange Geschichte.', 'dehnung'],
+      ['Viele Menschen fühlen sich mit ihrer Heimat eng verbunden.', 'ie dehnung'],
+      ['Ohne Quellen wüssten wir fast nichts über die Vergangenheit.', 'doppel ss'],
+      ['Historikerinnen und Historiker stellen den Quellen viele Fragen.', 'doppel ie'],
+      ['Die Wissenschaft von der Zeitmessung heißt Chronologie.', 'ss tz ie'],
+      ['Schon sehr früh beobachteten die Menschen die Sonne, den Mond und die Sterne.', 'komma dehnung'],
+      ['Nach dem Lauf der Himmelskörper stellten die Menschen die ersten Kalender auf.', 'doppel'],
+      ['Unser Kalender richtet sich nach dem Sonnenjahr.', 'dehnung doppel'],
+      ['Eine Sonnenuhr zeigt die Zeit nur an, wenn die Sonne scheint.', 'komma dehnung'],
+      ['In einer Sanduhr rieselt der Sand langsam nach unten.', 'ie dehnung'],
+      ['Mit Stonehenge konnte man den Sommeranfang und den Winteranfang bestimmen.', 'doppel gross'],
+      ['Später erfanden die Menschen mechanische Uhren und Wecker.', 'ä ck dehnung'],
+      ['Ein Jahrhundert dauert hundert Jahre, ein Jahrtausend dauert tausend Jahre.', 'komma dehnung']
+    ],
+    steinzeit: [
+      ['In der Altsteinzeit lebten die Menschen als Jäger und Sammler.', 'ä doppel'],
+      ['Sie zogen den Tieren hinterher und wohnten in Zelten aus Fellen.', 'ie dehnung tz doppel'],
+      ['Das Feuer spendete Wärme und schützte vor wilden Tieren.', 'ä tz ie v'],
+      ['Die Menschen sammelten Beeren, Nüsse und Wurzeln.', 'komma doppel ss'],
+      ['Aus Feuerstein stellten sie scharfe Werkzeuge her.', 'doppel'],
+      ['In der Jungsteinzeit wurden die Menschen sesshaft.', 'ss'],
+      ['Sie bauten feste Häuser und gründeten die ersten Dörfer.', 'äu ö'],
+      ['Die Bauern säten Getreide und hielten Ziegen, Schafe und Rinder.', 'komma ie ä'],
+      ['Auf einer Getreidemühle aus Stein mahlten sie die Körner zu Mehl.', 'dehnung ü ö'],
+      ['Plötzlich tauchte am Waldrand eine Gruppe fremder Jäger auf.', 'tz ä doppel'],
+      ['Die Dorfbewohner unterbrachen ihre Arbeit und schauten neugierig hinüber.', 'dehnung ie'],
+      ['Einer der Jäger zeigte aufgeregt auf das Feuer im Hintergrund.', 'ä gross'],
+      ['Eine Rekonstruktionszeichnung zeigt, wie das Leben damals ausgesehen haben könnte.', 'komma ie'],
+      ['Forscher finden die Spuren der Steinzeit oft tief in der Erde.', 'ie']
+    ],
+    bronzezeit: [
+      ['Nach der Steinzeit folgten die Bronzezeit und danach die Eisenzeit.', 'dehnung'],
+      ['Bronze ist eine Mischung aus Kupfer und Zinn.', 'doppel'],
+      ['Aus Bronze fertigten die Menschen Schwerter, Beile und Meißel.', 'komma ss'],
+      ['Die Himmelsscheibe von Nebra stammt aus der Bronzezeit.', 'doppel ss'],
+      ['Auf der Scheibe sieht man eine Mondsichel und viele goldene Sterne.', 'ie dehnung'],
+      ['Die goldenen Bögen am Rand zeigen den Lauf der Sonne.', 'ö'],
+      ['Eine kleine Gruppe von Sternen am Himmel heißt Plejaden.', 'ss doppel'],
+      ['Nach diesem Sternbild richteten sich die Bauern bei der Aussaat.', 'ie dehnung'],
+      ['Die Scheibe ist aus Bronze und wiegt ungefähr zwei Kilogramm.', 'ie ä'],
+      ['Heute kann man sie im Landesmuseum in Halle bewundern.', 'doppel'],
+      ['Zu dem berühmten Fund gehörten auch zwei Schwerter und zwei Beile.', 'dehnung ö'],
+      ['Wer Bronze herstellen wollte, brauchte viel Wissen und Geschick.', 'komma ss ck'],
+      ['Die Menschen in Mitteleuropa lernten, Metall zu schmelzen.', 'komma doppel'],
+      ['In Museen erzählen alte Gegenstände viel über die Vergangenheit.', 'ä doppel']
+    ]
+  };
+
+  var SECTIONS = [
+    { id: 'rechtschreibung', title: 'Rechtschreibung', sub: 'Alltagssätze mit Mia, Tim & Co.', icon: '✏️' },
+    { id: 'zeit', title: 'Zeit & Geschichte', sub: 'Quellen, Kalender, Sonnenuhr', icon: '⏳' },
+    { id: 'steinzeit', title: 'Steinzeit', sub: 'Jäger, Sammler und die ersten Bauern', icon: '🔥' },
+    { id: 'bronzezeit', title: 'Bronzezeit', sub: 'Himmelsscheibe von Nebra', icon: '🌙' }
+  ];
+
+  var list = S.map(function (s, i) {
+    return { id: 'b' + (i + 1), text: s[0], tags: s[1].split(' '), source: 'builtin', section: 'rechtschreibung' };
   });
+  Object.keys(HISTORY).forEach(function (sec) {
+    HISTORY[sec].forEach(function (s, i) {
+      list.push({ id: sec + '-' + (i + 1), text: s[0], tags: s[1].split(' '), source: 'builtin', section: sec });
+    });
+  });
+
+  root.DT = root.DT || {};
+  root.DT.sections = SECTIONS;
+  root.DT.builtinSentences = list;
 })(typeof window !== 'undefined' ? window : globalThis);
 
 /*
@@ -871,6 +963,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
     voiceName: '',         // '' = best available German voice
     rate: 0.9,
     slowRate: 0.6,
+    section: 'alle',     // chosen on the home screen: 'alle' or a section id from sentences.js
     coinValues: {
       sentence: 2,         // finishing a sentence (always)
       perfect: 3,          // sentence right first time
@@ -1096,10 +1189,18 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
       .map(function (s) { s.isDue = s.due <= now; return s; });
   }
 
-  function buildSession(store) {
+  // Sentences of one section ('alle' or missing = everything). Parent-added sentences are 'eigene'.
+  function sectionPool(store, section) {
+    var all = store.allSentences();
+    if (!section || section === 'alle') return all;
+    var pool = all.filter(function (s) { return (s.section || 'eigene') === section; });
+    return pool.length ? pool : all;
+  }
+
+  function buildSession(store, section) {
     var state = store.state;
     var n = state.settings.sessionLength;
-    var all = store.allSentences();
+    var all = sectionPool(store, section);
     var lastSeen = {};
     state.attempts.forEach(function (a) { lastSeen[a.sentenceId] = Math.max(lastSeen[a.sentenceId] || 0, a.ts); });
     var chosen = [], used = {};
@@ -1119,6 +1220,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 
     return {
       id: store.uid('s'),
+      section: section || 'alle',
       startedAt: Date.now(),
       sentences: shuffle(chosen),
       results: []   // per sentence: {sentenceId, result, corrected, coins}
@@ -1202,6 +1304,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   root.DT = root.DT || {};
   root.DT.practice = {
     buildSession: buildSession,
+    sectionPool: sectionPool,
     recordWordStats: recordWordStats,
     sentenceCoins: sentenceCoins,
     sessionBonuses: sessionBonuses,
@@ -1336,7 +1439,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
     $('home-streak').textContent = streak;
     $('home-streak-label').textContent = streak === 1 ? 'Tag in Folge' : 'Tage in Folge';
     $('home-words').textContent = P.problemWords(st).length;
-    $('start-sub').textContent = settings().sessionLength + ' Sätze';
+    renderSections();
+    $('start-sub').textContent = settings().sessionLength + ' Sätze · ' + sectionTitle(settings().section);
     var practisedToday = st.sessions.some(function (s) { return s.endedAt && P.dayKey(s.endedAt) === P.dayKey(Date.now()); });
     $('home-sub').textContent = practisedToday ? 'Heute schon geübt – super! Noch eine Runde?' : 'Hören, schreiben, prüfen, verbessern.';
     var n = $('speech-notice');
@@ -1345,10 +1449,49 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
     show('home');
   }
 
+  // ---------- sections (Thema wählen) ----------
+
+  function sectionTitle(id) {
+    if (!id || id === 'alle') return 'alles gemischt';
+    if (id === 'eigene') return 'eigene Sätze';
+    var sec = (DT.sections || []).filter(function (x) { return x.id === id; })[0];
+    return sec ? sec.title : 'alles gemischt';
+  }
+
+  function renderSections() {
+    var box = $('sections'), cur = settings().section || 'alle';
+    var all = store.allSentences();
+    var list = [{ id: 'alle', title: 'Alles gemischt', sub: all.length + ' Sätze', icon: '🔀' }].concat((DT.sections || []).map(function (x) {
+      var n = all.filter(function (s) { return s.section === x.id; }).length;
+      return { id: x.id, title: x.title, sub: x.sub + ' · ' + n + ' Sätze', icon: x.icon };
+    }));
+    var own = all.filter(function (s) { return !s.section; }).length;
+    if (own) list.push({ id: 'eigene', title: 'Eigene Sätze', sub: own + ' Sätze', icon: '📝' });
+    if (!list.some(function (x) { return x.id === cur; })) cur = 'alle';
+    box.innerHTML = '';
+    list.forEach(function (x) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'section' + (x.id === cur ? ' is-on' : '');
+      b.setAttribute('aria-pressed', x.id === cur ? 'true' : 'false');
+      b.dataset.section = x.id;
+      b.innerHTML = '<span class="section-icon" aria-hidden="true"></span><span class="section-text"><span class="section-title"></span><span class="section-sub"></span></span>';
+      b.querySelector('.section-icon').textContent = x.icon;
+      b.querySelector('.section-title').textContent = x.title;
+      b.querySelector('.section-sub').textContent = x.sub;
+      b.addEventListener('click', function () {
+        store.update(function (st) { st.settings.section = x.id; });
+        renderSections();
+        $('start-sub').textContent = settings().sessionLength + ' Sätze · ' + sectionTitle(x.id);
+      });
+      box.appendChild(b);
+    });
+  }
+
   // ---------- practice ----------
 
   function startSession() {
-    session = P.buildSession(store);
+    session = P.buildSession(store, settings().section);
     session.coins = 0;
     idx = 0;
     show('practice');
@@ -1579,6 +1722,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
     store.update(function (st) {
       st.sessions.push({ id: session.id, startedAt: session.startedAt, endedAt: now,
         sentenceIds: session.results.map(function (r) { return r.sentenceId; }),
+        section: session.section,
         coins: session.coins, accuracy: b.accuracy });
     });
     syncPlatform();

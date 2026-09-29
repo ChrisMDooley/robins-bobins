@@ -34,10 +34,18 @@
       .map(function (s) { s.isDue = s.due <= now; return s; });
   }
 
-  function buildSession(store) {
+  // Sentences of one section ('alle' or missing = everything). Parent-added sentences are 'eigene'.
+  function sectionPool(store, section) {
+    var all = store.allSentences();
+    if (!section || section === 'alle') return all;
+    var pool = all.filter(function (s) { return (s.section || 'eigene') === section; });
+    return pool.length ? pool : all;
+  }
+
+  function buildSession(store, section) {
     var state = store.state;
     var n = state.settings.sessionLength;
-    var all = store.allSentences();
+    var all = sectionPool(store, section);
     var lastSeen = {};
     state.attempts.forEach(function (a) { lastSeen[a.sentenceId] = Math.max(lastSeen[a.sentenceId] || 0, a.ts); });
     var chosen = [], used = {};
@@ -57,6 +65,7 @@
 
     return {
       id: store.uid('s'),
+      section: section || 'alle',
       startedAt: Date.now(),
       sentences: shuffle(chosen),
       results: []   // per sentence: {sentenceId, result, corrected, coins}
@@ -140,6 +149,7 @@
   root.DT = root.DT || {};
   root.DT.practice = {
     buildSession: buildSession,
+    sectionPool: sectionPool,
     recordWordStats: recordWordStats,
     sentenceCoins: sentenceCoins,
     sessionBonuses: sessionBonuses,

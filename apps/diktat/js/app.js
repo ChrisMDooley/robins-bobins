@@ -121,7 +121,8 @@
     $('home-streak').textContent = streak;
     $('home-streak-label').textContent = streak === 1 ? 'Tag in Folge' : 'Tage in Folge';
     $('home-words').textContent = P.problemWords(st).length;
-    $('start-sub').textContent = settings().sessionLength + ' Sätze';
+    renderSections();
+    $('start-sub').textContent = settings().sessionLength + ' Sätze · ' + sectionTitle(settings().section);
     var practisedToday = st.sessions.some(function (s) { return s.endedAt && P.dayKey(s.endedAt) === P.dayKey(Date.now()); });
     $('home-sub').textContent = practisedToday ? 'Heute schon geübt – super! Noch eine Runde?' : 'Hören, schreiben, prüfen, verbessern.';
     var n = $('speech-notice');
@@ -130,10 +131,49 @@
     show('home');
   }
 
+  // ---------- sections (Thema wählen) ----------
+
+  function sectionTitle(id) {
+    if (!id || id === 'alle') return 'alles gemischt';
+    if (id === 'eigene') return 'eigene Sätze';
+    var sec = (DT.sections || []).filter(function (x) { return x.id === id; })[0];
+    return sec ? sec.title : 'alles gemischt';
+  }
+
+  function renderSections() {
+    var box = $('sections'), cur = settings().section || 'alle';
+    var all = store.allSentences();
+    var list = [{ id: 'alle', title: 'Alles gemischt', sub: all.length + ' Sätze', icon: '🔀' }].concat((DT.sections || []).map(function (x) {
+      var n = all.filter(function (s) { return s.section === x.id; }).length;
+      return { id: x.id, title: x.title, sub: x.sub + ' · ' + n + ' Sätze', icon: x.icon };
+    }));
+    var own = all.filter(function (s) { return !s.section; }).length;
+    if (own) list.push({ id: 'eigene', title: 'Eigene Sätze', sub: own + ' Sätze', icon: '📝' });
+    if (!list.some(function (x) { return x.id === cur; })) cur = 'alle';
+    box.innerHTML = '';
+    list.forEach(function (x) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'section' + (x.id === cur ? ' is-on' : '');
+      b.setAttribute('aria-pressed', x.id === cur ? 'true' : 'false');
+      b.dataset.section = x.id;
+      b.innerHTML = '<span class="section-icon" aria-hidden="true"></span><span class="section-text"><span class="section-title"></span><span class="section-sub"></span></span>';
+      b.querySelector('.section-icon').textContent = x.icon;
+      b.querySelector('.section-title').textContent = x.title;
+      b.querySelector('.section-sub').textContent = x.sub;
+      b.addEventListener('click', function () {
+        store.update(function (st) { st.settings.section = x.id; });
+        renderSections();
+        $('start-sub').textContent = settings().sessionLength + ' Sätze · ' + sectionTitle(x.id);
+      });
+      box.appendChild(b);
+    });
+  }
+
   // ---------- practice ----------
 
   function startSession() {
-    session = P.buildSession(store);
+    session = P.buildSession(store, settings().section);
     session.coins = 0;
     idx = 0;
     show('practice');
@@ -364,6 +404,7 @@
     store.update(function (st) {
       st.sessions.push({ id: session.id, startedAt: session.startedAt, endedAt: now,
         sentenceIds: session.results.map(function (r) { return r.sentenceId; }),
+        section: session.section,
         coins: session.coins, accuracy: b.accuracy });
     });
     syncPlatform();

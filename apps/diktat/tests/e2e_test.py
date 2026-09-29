@@ -95,6 +95,30 @@ with sync_playwright() as p:
     print('summary text:', pg.inner_text('#summary')[:400].replace('\n', ' | '))
 
     # phone layout of feedback
+    # ---- Thema wählen: a history section only gives sentences from that section ----
+    sp = b.new_page(viewport={'width': 1280, 'height': 900})
+    sp.on('pageerror', lambda e: errors.append(str(e)))
+    sp.add_init_script(MOCK)
+    sp.goto('http://127.0.0.1:8765/index.html'); sp.wait_for_timeout(300)
+    n_sections = sp.locator('.section').count()
+    assert n_sections >= 5, f'expected ≥5 section buttons, got {n_sections}'
+    for sec in ('steinzeit', 'zeit', 'bronzezeit'):
+        sp.click(f'.section[data-section={sec}]'); sp.wait_for_timeout(100)
+        assert sp.get_attribute(f'.section[data-section={sec}]', 'aria-pressed') == 'true'
+        sp.reload(); sp.wait_for_timeout(300)
+        assert sp.get_attribute(f'.section[data-section={sec}]', 'aria-pressed') == 'true', 'choice not remembered'
+        sp.click('#btn-start'); sp.wait_for_timeout(500)
+        texts = sp.evaluate("window.__spoken.map(u => u.text)")
+        pool = sp.evaluate(f"DT.builtinSentences.filter(s => s.section === '{sec}').map(s => s.text)")
+        assert texts and all(t in pool for t in texts), f'{sec}: sentence from another section: {texts}'
+        if sec == 'steinzeit': sp.screenshot(path=f'{OUT}/shot-sections-practice.png')
+        sp.click('#btn-quit'); sp.wait_for_timeout(300)
+        sp.evaluate("window.__spoken = []")
+    sp.click('.section[data-section=steinzeit]'); sp.wait_for_timeout(100)
+    sp.screenshot(path=f'{OUT}/shot-sections-home.png', full_page=True)
+    print('sections ok:', n_sections, 'buttons')
+    sp.close()
+
     ph = b.new_page(viewport={'width': 390, 'height': 844}, device_scale_factor=2)
     ph.add_init_script(MOCK)
     ph.goto('http://127.0.0.1:8765/index.html')
@@ -105,7 +129,7 @@ with sync_playwright() as p:
     ph.screenshot(path=f'{OUT}/shot-6-phone-feedback.png', full_page=True)
     assert ph.is_visible('#in-all'), 'sentence mode not used for a very wrong answer'
     tgt = ph.evaluate('window.__spoken[0].text')
-    ph.fill('#in-all', tgt.replace('.', ''))
+    ph.fill('#in-all', tgt[:-1])   # drop the final punctuation mark (. ! ? or “)
     ph.press('#in-all', 'Enter'); ph.wait_for_timeout(200)
     assert 'Fast' in ph.inner_text('#msg-all')
     ph.fill('#in-all', tgt); ph.wait_for_timeout(500)
