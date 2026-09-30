@@ -153,6 +153,8 @@ The streak counts a day when *any* app recorded an activity. Coin *rules* stay p
 
 See `docs/NEW-APP.md`. In short: copy `apps/_template`, add one entry to `apps/registry.js`, add its files to `sw.js`, tick it for a child in Elternbereich.
 
+Apps can also live in **their own repository** (first one: Europa-Trainer). The registry entry then has `url` instead of `path`, the app loads `shared/rb.js` optionally from `../robins-bobins/`, keeps its own service worker and tests, and may ship an `rb-card.js` for the home card line. Same GitHub Pages origin → shared `localStorage`, family PIN and backup work unchanged.
+
 ## 10. Decisions for Chris
 
 Milestone 1 is built with the defaults below; none of them block anything, but they are yours to make.

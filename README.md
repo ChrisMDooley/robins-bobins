@@ -6,6 +6,7 @@ Our family's little learning world, with Robin the whippet.
 The platform handles who is practising, navigation, Robin, one coin balance per child, streaks, the parent area and backups. Each app in `apps/` teaches one thing well:
 
 - **Diktat Trainer** (`apps/diktat/`) — German dictation, for Lukas.
+- **Europa-Trainer** (own repo: [europa-trainer](https://github.com/ChrisMDooley/europa-trainer)) — European countries, capitals, seas, rivers, mountains, borders for Lukas's Europa-Arbeit; geography and spelling tracked separately. No coins.
 - **Deutschland & Hessen** (`apps/geo/`) — Sachunterricht Klasse 4: Bundesländer, Hauptstädte, Wappen, Nachbarländer, Hessen (Städte, Flüsse, Gebirge, with Wehrheim as home anchor), Kartenkunde. For Alex. See [`apps/geo/README.md`](apps/geo/README.md).
 
 ## Running it

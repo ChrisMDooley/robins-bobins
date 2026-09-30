@@ -40,3 +40,26 @@ Link `../../shared/rb-theme.css` for the shared look (tokens `--rb-*`, `.rb-btn`
 - **Keep Robin quiet inside the app.** A short line at the start or end is plenty.
 - **Show a line on the home card** (optional): a bridge global with `cardInfo(childId)` — see `apps/geo/js/rb-bridge.js`, loaded from the root `index.html`.
 - **Test with a real flow** — see `tests/platform_e2e.py` for how to drive a whole session in headless Chromium.
+
+## Apps in their own repository
+
+A bigger app can live in its own repo and site (example: **Europa-Trainer**,
+`github.com/ChrisMDooley/europa-trainer` → `chrismdooley.github.io/europa-trainer/`).
+Both sites are on `chrismdooley.github.io`, so they share `localStorage` (children, coins, activity,
+PIN unlock).
+
+1. **Register it with `url`** instead of `path`:
+   ```js
+   R.register({ id: 'europa', title: 'Europa-Trainer', subject: 'Erdkunde', icon: '🌍', color: '#2F6DB5',
+                url: '../europa-trainer/', storagePrefix: 'europa-trainer:',
+                bridge: 'RBEuropa', grantTo: ['lukas'] });
+   ```
+   `url` is absolute or relative to the platform root; the child is passed as `?child=<id>`.
+2. **In the app,** load `../robins-bobins/shared/rb.js` (and `robin.js`) *optionally* and talk to
+   `RB` from one file only (Europa: `js/platform.js`). If `RB` is missing the app runs on its own.
+3. **Card line (optional):** the app ships `rb-card.js`; the platform `index.html` loads it with
+   `<script src="../europa-trainer/rb-card.js" onerror="this.remove()">`.
+4. **Offline:** the app has its own `sw.js`; nothing goes into the platform `sw.js`.
+5. **Publish order:** push and enable Pages for the app first, then push the registry change, so a
+   child never sees a card pointing at a missing site.
+6. The platform tests ignore a 404 for the optional card script only.

@@ -296,9 +296,13 @@
     base: BASE,
     pickerUrl: function () { return BASE + 'index.html#/'; },
     homeUrl: function (childId) { return BASE + 'index.html#/c/' + encodeURIComponent(childId); },
+    // Apps in this repo use `path`; apps with their own repository use `url`
+    // (absolute, or relative to the platform root: '../europa-trainer/' on the same site).
     appUrl: function (appId, childId) {
       var a = apps.get(appId);
-      return a ? BASE + a.path + '?child=' + encodeURIComponent(childId) : null;
+      if (!a) return null;
+      var u = a.url ? (/^https?:\/\//.test(a.url) ? a.url : BASE + a.url) : BASE + a.path;
+      return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'child=' + encodeURIComponent(childId);
     },
     home: function (childId) { root.location.href = nav.homeUrl(childId); }
   };

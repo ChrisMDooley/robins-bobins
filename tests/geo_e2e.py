@@ -88,13 +88,15 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={'width': 1280, 'height': 900})
     pg.add_init_script(UNLOCK)
     pg.on('pageerror', lambda e: errors.append('pageerror: ' + str(e)))
-    pg.on('console', lambda m: m.type == 'error' and errors.append('console: ' + m.text))
+    pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errors.append('console: ' + m.text))
+    pg.on('response', lambda r: r.status >= 400 and '/europa-trainer/' not in r.url and errors.append('HTTP %d %s' % (r.status, r.url)))
 
     # ---------- platform: Alex gets the app once ----------
     pg.goto(URL + 'index.html'); pg.evaluate('localStorage.clear()'); pg.reload(); pg.wait_for_timeout(300)
     pg.click('.kid[data-child=alex]'); pg.wait_for_timeout(250)
     check('Geo card on Alex home', pg.locator('.app-card[data-app=geo]').count() == 1)
-    check('card shows countdown', 'LZK' in pg.inner_text('.app-card[data-app=geo]'), pg.inner_text('.app-card[data-app=geo]'))
+    lzk_passed = pg.evaluate("new Date() > new Date('2026-09-29T23:59:59')")
+    check('card shows countdown (until the test date)', lzk_passed or 'LZK' in pg.inner_text('.app-card[data-app=geo]'), pg.inner_text('.app-card[data-app=geo]'))
     pg.screenshot(path=f'{OUT}/geo-0-alex-home.png')
     pg.click('#/c/alex' if False else '.app-card[data-app=geo]'); pg.wait_for_timeout(500)
     check('URL carries child', 'apps/geo/index.html?child=alex' in pg.url, pg.url)
