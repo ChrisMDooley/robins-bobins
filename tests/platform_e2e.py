@@ -93,9 +93,13 @@ with sync_playwright() as p:
     pg.click('.kid[data-child=lukas]'); pg.wait_for_timeout(250)
     check('home greets Lukas', 'Hallo Lukas!' in pg.inner_text('h1'))
     check('Diktat card for Lukas', pg.locator('.app-card[data-app=diktat]').count() == 1)
-    check('Europa-Trainer card for Lukas (own repo, granted once)', pg.locator('.app-card[data-app=europa]').count() == 1)
-    href = pg.get_attribute('.app-card[data-app=europa]', 'href') or ''
-    check('Europa card links to the sibling site with the child', href.endswith('../europa-trainer/?child=lukas'), href)
+    eu_hidden = pg.evaluate("() => !!(RB.apps.get('europa') || {}).hidden")
+    if eu_hidden:
+        check('Europa-Trainer card hidden until its site is live', pg.locator('.app-card[data-app=europa]').count() == 0)
+    else:
+        check('Europa-Trainer card for Lukas (own repo, granted once)', pg.locator('.app-card[data-app=europa]').count() == 1)
+        href = pg.get_attribute('.app-card[data-app=europa]', 'href') or ''
+        check('Europa card links to the sibling site with the child', href.endswith('../europa-trainer/?child=lukas'), href)
     check('card info from Diktat', 'Wort zum Wiederholen' in pg.inner_text('.app-card'), pg.inner_text('.app-card'))
     check('streak from legacy session', '1' in pg.inner_text('.stats .stat:first-child'), pg.inner_text('.stats'))
     pg.screenshot(path=f'{OUT}/rb-2-lukas-home.png')
