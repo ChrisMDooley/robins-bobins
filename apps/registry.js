@@ -51,8 +51,7 @@
     url: '../europa-trainer/',
     storagePrefix: 'europa-trainer:',
     bridge: 'RBEuropa',          // card line, from ../europa-trainer/rb-card.js (optional)
-    grantTo: ['lukas'],
-    hidden: true                 // until chrismdooley.github.io/europa-trainer/ is live
+    grantTo: ['lukas']
   });
 
   // Starter for new apps. Hidden from children; open apps/_template/?child=lukas to try it.
