@@ -63,3 +63,14 @@ PIN unlock).
 5. **Publish order:** push and enable Pages for the app first, then push the registry change, so a
    child never sees a card pointing at a missing site.
 6. The platform tests ignore a 404 for the optional card script only.
+
+## Guests (a classmate)
+
+A guest has a start page `gast/?name=<Name>` that never loads `rb.js` — no family PIN, no family data.
+`shared/guest.js` (`RBGuest`) holds the guest's apps (`APPS`), one coin total, a small activity log
+(streak, "heute geübt") and the guests' parent PINs (salted hashes only). An app supports guests when
+it accepts `?gast=<Name>`, then loads `../robins-bobins/shared/guest.js` instead of `rb.js` and uses
+`RBGuest.startUrl`, `RBGuest.coins.add(n, reason, appId)`, `RBGuest.activity.record(appId, summary)`,
+`RBGuest.hasPin()/checkPin(pin)`. Example: Europa-Trainer (`index.html`, `js/platform.js`).
+To offer an app to guests: add it to `APPS` in `shared/guest.js`.
+New guest PIN: add `sha256(SALT + id) → sha256(SALT + id + ':' + pin)` to `PINS` (id = lower-case name).

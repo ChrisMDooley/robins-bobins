@@ -1,9 +1,9 @@
 /* sw.js — Robin's Bobins offline cache (covers the platform AND every app).
    Bump VERSION on every release. Network first, so updates arrive; cache as offline fallback. */
-const VERSION = 'rb-v0.2.5';
+const VERSION = 'rb-v0.2.6';
 const FILES = [
   './', 'index.html', 'manifest.webmanifest',
-  'shared/rb.js', 'shared/robin.js', 'shared/rb-theme.css',
+  'shared/rb.js', 'shared/robin.js', 'shared/rb-theme.css', 'shared/guest.js', 'gast/index.html', 'gast/manifest.webmanifest',
   'shared/fonts/atkinson-hyperlegible-latin-400-normal.woff2', 'shared/fonts/atkinson-hyperlegible-latin-700-normal.woff2',
   'platform/app.js', 'apps/registry.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',

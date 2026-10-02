@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Robin's Bobins</title>
+<meta name="theme-color" content="#FBF5EC">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lernen">
+<link rel="stylesheet" href="../shared/rb-theme.css">
+<style>
+  .guest-empty { text-align: center; padding: 48px 0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .guest-empty .robin { width: 120px; height: 120px; }
+</style>
+</head>
+<body>
+<!-- Start page for a GUEST (a classmate): ?name=<Name>. No family PIN, no family data —
+     this page never loads rb.js. See shared/guest.js. -->
+<main id="view" class="shell" aria-live="polite"></main>
+<noscript>Robin's Bobins braucht JavaScript.</noscript>
+
+<script>window.RB = {};</script>
+<script src="../shared/robin.js"></script>
+<script src="../shared/guest.js"></script>
+<script>
+  // Card lines from the apps (optional; a missing file just means no line).
+  RBGuest.apps.forEach(function (a) {
+    if (a.card) document.write('<script src="' + RBGuest.siteRoot + a.card + '" onerror="this.remove()"><\/script>');
+  });
+</script>
+<script>
+(function () {
+  'use strict';
+  var G = RBGuest, view = document.getElementById('view');
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function robin(pose, size) { var el = RB.robin.el(pose, size); return el.outerHTML; }
+
+  if (!G.name) {
+    view.innerHTML = '<section class="guest-empty">' + robin('thinking', 120) +
+      '<h1 style="margin:0">Hallo!</h1><p class="help">Dieser Link braucht noch einen Namen.<br>Bitte den Link benutzen, den du bekommen hast.</p></section>';
+    return;
+  }
+
+  var s = G.activity.summary(), coins = G.coins.balance();
+  var line = RB.robin.say({ name: G.name }, s);
+  var cards = G.apps.map(function (a) {
+    var b = a.bridge && window[a.bridge], info = '';
+    if (b && b.cardInfo) { try { info = b.cardInfo(G.childId) || ''; } catch (e) { info = ''; } }
+    return '<a class="app-card" href="' + esc(G.appUrl(a)) + '" style="--c:' + esc(a.color) + '" data-app="' + esc(a.id) + '">' +
+      '<span class="app-icon" aria-hidden="true">' + esc(a.icon) + '</span>' +
+      '<span class="app-title">' + esc(a.title) + '</span>' +
+      '<span class="app-sub">' + esc(a.subject) + '</span>' +
+      (info ? '<span class="app-info">' + esc(info) + '</span>' : '') + '</a>';
+  }).join('');
+
+  view.innerHTML =
+    '<header class="bar">' +
+      '<span class="rb-wordmark">Robin’s <b>Bobins</b></span>' +
+      '<span class="rb-coins" title="Robin-Münzen"><span class="rb-coin" aria-hidden="true"></span><span id="coins">' + coins + '</span></span>' +
+    '</header>' +
+    '<section class="home">' +
+      '<div class="greet">' + robin(line.pose) +
+        '<div><h1>Hallo ' + esc(G.name) + '!</h1><span class="rb-bubble">' + esc(line.text) + '</span></div></div>' +
+      '<div class="stats">' +
+        '<span class="stat"><span class="ico">🔥</span>' + s.streak + ' <small>' + (s.streak === 1 ? 'Tag in Folge' : 'Tage in Folge') + '</small></span>' +
+        '<span class="stat"><span class="rb-coin" aria-hidden="true"></span>' + coins + ' <small>Robin-Münzen</small></span>' +
+        '<span class="stat"><span class="ico">⭐</span>' + s.today + ' <small>' + (s.today === 1 ? 'Übung heute' : 'Übungen heute') + '</small></span>' +
+      '</div>' +
+      '<h2 class="section-h">Meine Apps</h2>' +
+      '<nav class="apps" aria-label="Meine Apps">' + cards + '</nav>' +
+    '</section>';
+  document.title = G.name + ' · Robin’s Bobins';
+
+  // Back from an app with the browser button: show fresh coins.
+  window.addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); });
+})();
+</script>
+</body>
+</html>
