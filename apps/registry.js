@@ -54,6 +54,20 @@
     grantTo: ['lukas']
   });
 
+  // Bruch-Bobins (fractions, Klasse 6) — own repository, like Europa-Trainer.
+  R.register({
+    id: 'bruch',
+    title: 'Bruch-Bobins',
+    subject: 'Mathe',
+    icon: '🍕',
+    color: '#E0673B',
+    url: '../bruch-bobins/',
+    storagePrefix: 'bruch-bobins:',
+    bridge: 'RBBruch',           // card line, from ../bruch-bobins/rb-card.js (optional)
+    grantTo: ['lukas'],
+    hidden: true                 // until chrismdooley.github.io/bruch-bobins/ is live
+  });
+
   // Starter for new apps. Hidden from children; open apps/_template/?child=lukas to try it.
   R.register({
     id: 'template',

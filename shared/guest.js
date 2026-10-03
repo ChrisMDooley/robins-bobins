@@ -18,7 +18,9 @@
   // To add one: a line here; the app needs guest mode (?gast=<Name>, see europa-trainer/js/platform.js).
   var APPS = [
     { id: 'europa', title: 'Europa-Trainer', subject: 'Erdkunde', icon: '🌍', color: '#2F6DB5',
-      url: 'europa-trainer/', card: 'europa-trainer/rb-card.js', bridge: 'RBEuropa' }
+      url: 'europa-trainer/', card: 'europa-trainer/rb-card.js', bridge: 'RBEuropa' },
+    { id: 'bruch', title: 'Bruch-Bobins', subject: 'Mathe', icon: '🍕', color: '#E0673B',
+      url: 'bruch-bobins/', card: 'bruch-bobins/rb-card.js', bridge: 'RBBruch', hidden: true }   // hidden until the site is live
   ];
 
   var SALT = 'robins-bobins-guest:6b58224c93d388ca:';
@@ -79,7 +81,7 @@
 
   var G = {
     name: name, id: id, childId: id ? 'gast-' + id : '',
-    apps: APPS, siteRoot: siteRoot,
+    apps: APPS.filter(function (a) { return !a.hidden; }), siteRoot: siteRoot,
     startUrl: siteRoot + 'robins-bobins/gast/' + (name ? '?name=' + encodeURIComponent(name) : ''),
     appUrl: function (a) { return siteRoot + a.url + '?gast=' + encodeURIComponent(name); },
     // Coins: earned only, never taken away.
