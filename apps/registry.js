@@ -77,8 +77,7 @@
     url: '../musik-bobins/',
     storagePrefix: 'musik-bobins:',
     bridge: 'RBMusik',           // card line, from ../musik-bobins/rb-card.js (optional)
-    grantTo: ['lukas'],
-    hidden: true                 // until chrismdooley.github.io/musik-bobins/ is live
+    grantTo: ['lukas']
   });
 
   // Starter for new apps. Hidden from children; open apps/_template/?child=lukas to try it.

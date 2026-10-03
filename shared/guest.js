@@ -22,7 +22,7 @@
     { id: 'bruch', title: 'Bruch-Bobins', subject: 'Mathe', icon: '🍕', color: '#E0673B',
       url: 'bruch-bobins/', card: 'bruch-bobins/rb-card.js', bridge: 'RBBruch' },
     { id: 'musik', title: 'Musik-Bobins', subject: 'Musik', icon: '🎵', color: '#7B5EA7',
-      url: 'musik-bobins/', card: 'musik-bobins/rb-card.js', bridge: 'RBMusik', hidden: true }
+      url: 'musik-bobins/', card: 'musik-bobins/rb-card.js', bridge: 'RBMusik' }
   ];
 
   var SALT = 'robins-bobins-guest:6b58224c93d388ca:';
