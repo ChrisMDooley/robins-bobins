@@ -64,8 +64,7 @@
     url: '../bruch-bobins/',
     storagePrefix: 'bruch-bobins:',
     bridge: 'RBBruch',           // card line, from ../bruch-bobins/rb-card.js (optional)
-    grantTo: ['lukas'],
-    hidden: true                 // until chrismdooley.github.io/bruch-bobins/ is live
+    grantTo: ['lukas']
   });
 
   // Starter for new apps. Hidden from children; open apps/_template/?child=lukas to try it.

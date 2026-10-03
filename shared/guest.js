@@ -20,7 +20,7 @@
     { id: 'europa', title: 'Europa-Trainer', subject: 'Erdkunde', icon: '🌍', color: '#2F6DB5',
       url: 'europa-trainer/', card: 'europa-trainer/rb-card.js', bridge: 'RBEuropa' },
     { id: 'bruch', title: 'Bruch-Bobins', subject: 'Mathe', icon: '🍕', color: '#E0673B',
-      url: 'bruch-bobins/', card: 'bruch-bobins/rb-card.js', bridge: 'RBBruch', hidden: true }   // hidden until the site is live
+      url: 'bruch-bobins/', card: 'bruch-bobins/rb-card.js', bridge: 'RBBruch' }
   ];
 
   var SALT = 'robins-bobins-guest:6b58224c93d388ca:';
