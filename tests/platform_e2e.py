@@ -57,7 +57,7 @@ with sync_playwright() as p:
     pg.on('pageerror', lambda e: errors.append('pageerror: ' + str(e)))
     # 404s are errors, except optional files of sibling apps that are not served in this test
     pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errors.append('console: ' + m.text))
-    pg.on('response', lambda r: r.status >= 400 and '/europa-trainer/' not in r.url and '/bruch-bobins/' not in r.url and errors.append('HTTP %d %s' % (r.status, r.url)))
+    pg.on('response', lambda r: r.status >= 400 and '/europa-trainer/' not in r.url and '/bruch-bobins/' not in r.url and '/musik-bobins/' not in r.url and errors.append('HTTP %d %s' % (r.status, r.url)))
     pg.add_init_script(MOCK)
 
     # ---------- family PIN gate (fresh browser, nothing stored) ----------

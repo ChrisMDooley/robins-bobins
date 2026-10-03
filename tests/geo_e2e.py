@@ -89,7 +89,7 @@ with sync_playwright() as p:
     pg.add_init_script(UNLOCK)
     pg.on('pageerror', lambda e: errors.append('pageerror: ' + str(e)))
     pg.on('console', lambda m: m.type == 'error' and 'Failed to load resource' not in m.text and errors.append('console: ' + m.text))
-    pg.on('response', lambda r: r.status >= 400 and '/europa-trainer/' not in r.url and '/bruch-bobins/' not in r.url and errors.append('HTTP %d %s' % (r.status, r.url)))
+    pg.on('response', lambda r: r.status >= 400 and '/europa-trainer/' not in r.url and '/bruch-bobins/' not in r.url and '/musik-bobins/' not in r.url and errors.append('HTTP %d %s' % (r.status, r.url)))
 
     # ---------- platform: Alex gets the app once ----------
     pg.goto(URL + 'index.html'); pg.evaluate('localStorage.clear()'); pg.reload(); pg.wait_for_timeout(300)

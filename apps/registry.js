@@ -67,6 +67,20 @@
     grantTo: ['lukas']
   });
 
+  // Musik-Bobins (Musiktest 4.11.2026) — own repository, like Europa-Trainer.
+  R.register({
+    id: 'musik',
+    title: 'Musik-Bobins',
+    subject: 'Musik',
+    icon: '🎵',
+    color: '#7B5EA7',
+    url: '../musik-bobins/',
+    storagePrefix: 'musik-bobins:',
+    bridge: 'RBMusik',           // card line, from ../musik-bobins/rb-card.js (optional)
+    grantTo: ['lukas'],
+    hidden: true                 // until chrismdooley.github.io/musik-bobins/ is live
+  });
+
   // Starter for new apps. Hidden from children; open apps/_template/?child=lukas to try it.
   R.register({
     id: 'template',
