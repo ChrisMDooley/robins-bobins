@@ -81,7 +81,6 @@
   });
 
   // English-Bobins (Englisch, Green Line 1/2) — own repository, like Europa-Trainer.
-  // hidden until chrismdooley.github.io/english-bobins/ is live (publish order: app site first).
   R.register({
     id: 'english',
     title: 'English-Bobins',
@@ -91,8 +90,7 @@
     url: '../english-bobins/',
     storagePrefix: 'english-bobins:',
     bridge: 'RBEnglish',         // card line, from ../english-bobins/rb-card.js (optional)
-    grantTo: ['lukas'],
-    hidden: true
+    grantTo: ['lukas']
   });
 
   // Starter for new apps. Hidden from children; open apps/_template/?child=lukas to try it.
