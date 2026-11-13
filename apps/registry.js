@@ -93,6 +93,19 @@
     grantTo: ['lukas']
   });
 
+  // Biologie-Bobins (Biologie Klasse 6, Lernkontrolle Nr. 1) — own repository, like Europa-Trainer.
+  R.register({
+    id: 'biologie',
+    title: 'Biologie-Bobins',
+    subject: 'Biologie',
+    icon: '🌿',
+    color: '#3E9A62',
+    url: '../biologie-bobins/',
+    storagePrefix: 'biologie-bobins:',
+    bridge: 'RBBiologie',        // card line, from ../biologie-bobins/rb-card.js (optional)
+    grantTo: ['lukas']
+  });
+
   // Starter for new apps. Hidden from children; open apps/_template/?child=lukas to try it.
   R.register({
     id: 'template',
